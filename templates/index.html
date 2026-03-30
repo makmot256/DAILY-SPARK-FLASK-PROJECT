@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Spark ✦</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #161618;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0ede8;
+      --muted: #7a7774;
+      --accent-quote: #e8c97a;
+      --accent-joke: #7ac4e8;
+      --accent-any: #c47ae8;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow: hidden;
+    }
+
+    /* Background grain */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      text-align: center;
+    }
+
+    header {
+      margin-bottom: 3rem;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .logo span {
+      color: var(--accent-quote);
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: border-color 0.4s ease;
+      margin-bottom: 2rem;
+    }
+
+    .card.quote-mode  { border-color: rgba(232, 201, 122, 0.25); }
+    .card.joke-mode   { border-color: rgba(122, 196, 232, 0.25); }
+    .card.any-mode    { border-color: rgba(196, 122, 232, 0.25); }
+
+    .type-badge {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.4rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .type-badge.visible { opacity: 1; }
+    .type-badge.quote { background: rgba(232,201,122,0.12); color: var(--accent-quote); }
+    .type-badge.joke  { background: rgba(122,196,232,0.12); color: var(--accent-joke); }
+
+    .quote-mark {
+      font-family: 'Playfair Display', serif;
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--border);
+      position: absolute;
+      top: 1rem;
+      left: 1.5rem;
+      transition: color 0.4s ease;
+      user-select: none;
+    }
+    .card.quote-mode .quote-mark { color: rgba(232,201,122,0.12); }
+    .card.joke-mode  .quote-mark { color: rgba(122,196,232,0.12); }
+    .card.any-mode   .quote-mark { color: rgba(196,122,232,0.12); }
+
+    #content-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      line-height: 1.7;
+      font-style: italic;
+      color: var(--text);
+      max-width: 520px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #content-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #content-author {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 1.2rem;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+    }
+
+    #content-author.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .placeholder {
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Buttons */
+    .buttons {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: none;
+      border-radius: 50px;
+      padding: 0.75rem 1.6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-any {
+      background: rgba(196, 122, 232, 0.15);
+      color: var(--accent-any);
+      border: 1px solid rgba(196,122,232,0.25);
+    }
+    .btn-any:hover {
+      background: rgba(196,122,232,0.25);
+      box-shadow: 0 0 20px rgba(196,122,232,0.15);
+    }
+
+    .btn-quote {
+      background: rgba(232, 201, 122, 0.1);
+      color: var(--accent-quote);
+      border: 1px solid rgba(232,201,122,0.2);
+    }
+    .btn-quote:hover {
+      background: rgba(232,201,122,0.2);
+      box-shadow: 0 0 20px rgba(232,201,122,0.1);
+    }
+
+    .btn-joke {
+      background: rgba(122, 196, 232, 0.1);
+      color: var(--accent-joke);
+      border: 1px solid rgba(122,196,232,0.2);
+    }
+    .btn-joke:hover {
+      background: rgba(122,196,232,0.2);
+      box-shadow: 0 0 20px rgba(122,196,232,0.1);
+    }
+
+    .btn-copy {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      padding: 0.6rem 1.2rem;
+    }
+    .btn-copy:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* Loading dots */
+    .loading { display: none; }
+    .loading.show { display: inline-flex; gap: 4px; align-items: center; }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 2rem 1.5rem; }
+      .buttons { gap: 0.6rem; }
+      button { padding: 0.65rem 1.2rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Daily <span>Spark</span> ✦</div>
+      <p class="tagline">Quotes &amp; Jokes on demand</p>
+    </header>
+
+    <div class="card" id="card">
+      <div class="quote-mark">"</div>
+      <span class="type-badge" id="type-badge"></span>
+      <p class="placeholder" id="placeholder">Hit a button to get started ✦</p>
+      <div class="loading" id="loading">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <p id="content-text"></p>
+      <p id="content-author"></p>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-any"   onclick="fetch_content('random')">✦ Surprise Me</button>
+      <button class="btn-quote" onclick="fetch_content('quote')">💬 Quote</button>
+      <button class="btn-joke"  onclick="fetch_content('joke')">😄 Joke</button>
+      <button class="btn-copy"  onclick="copyText()">⎘ Copy</button>
+    </div>
+
+    <footer>Refreshing your day, one spark at a time.</footer>
+  </div>
+
+  <script>
+    let currentText = '';
+
+    async function fetch_content(type) {
+      const card       = document.getElementById('card');
+      const textEl     = document.getElementById('content-text');
+      const authorEl  = document.getElementById('content-author');
+      const placeholder = document.getElementById('placeholder');
+      const loading    = document.getElementById('loading');
+      const badge      = document.getElementById('type-badge');
+
+      // Hide current text
+      textEl.classList.remove('visible');
+      authorEl.classList.remove('visible');
+      badge.classList.remove('visible');
+      placeholder.style.display = 'none';
+      loading.classList.add('show');
+
+      try {
+        const endpoint = type === 'random' ? '/api/random' : `/api/${type}`;
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        currentText = data.text;
+
+        textEl.textContent = `"${data.text}"`;
+        authorEl.textContent = data.author ? `— ${data.author}` : `#${data.category}`;
+
+        // Update badge
+        badge.textContent = data.type === 'quote' ? '💬 Quote' : '😄 Joke';
+        badge.className = `type-badge ${data.type}`;
+
+        // Update card mode
+        card.className = `card ${data.type}-mode`;
+        if (type === 'random') card.className = 'card any-mode';
+
+        loading.classList.remove('show');
+
+        // Animate in
+        requestAnimationFrame(() => {
+          textEl.classList.add('visible');
+          authorEl.classList.add('visible');
+          badge.classList.add('visible');
+        });
+
+      } catch (err) {
+        loading.classList.remove('show');
+        placeholder.textContent = 'Oops, something went wrong.';
+        placeholder.style.display = 'block';
+      }
+    }
+
+    function copyText() {
+      if (!currentText) return;
+      navigator.clipboard.writeText(currentText).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = '⎘ Copy', 1800);
+      });
+    }
+  </script>
+</body>
+</html>
